@@ -1,4 +1,4 @@
-module GameBoard (createBoard) where
+module GameBoard (createBoard, update) where
 import Data.Graph.Wrapper
 
 -- Returns the intended lengths for the middle rows.
@@ -49,3 +49,11 @@ createTri n op = [(n',[n' `op` (-1)])]
                 connect' ((i,es):is) = (i, es' ++ es) : connect' is
                       where
                           es' = i `op` (-8):[i `op` (-9)]
+                          
+update :: Int -> Maybe Int -> Graph Int (Maybe Int) -> Graph Int (Maybe Int)
+update i v g = fromList $ a ++ b'  
+           where
+               (a,b) = splitAt (i-1) (toList g)
+               b' = if null b then b else change (head b) : tail b
+               change (i', _, es) =  (i', v, es)
+                         
