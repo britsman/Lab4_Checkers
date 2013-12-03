@@ -11,17 +11,18 @@ rowLengthsMid = [13,12..9]
 {- Returns the intended lengths of the rows within the triangle, as well as 
    the length of the middle row that it connects to. -}
 rowLengthsTri :: [Int]
-rowLengthsTri = [1..4] ++ [13]
+rowLengthsTri = [4,3..1] 
 
 {- Creates the full gameboard by constructing a graph from the upper/lower
    half/triangle. Edges only need to be constructed in one direction, 
    since each edge contains both nodes (1 edge = 2 patterns to match on). -}              
 createBoard :: Graph Node Node
 createBoard = fromListSimple $ concat ((createMid 11 rowLengthsMid (+)) ++ 
-                       (createMid 111 rowLengthsMid (-))) ++ centerRow
-               where centerRow = (((57, Nothing), [(58,Nothing)]): 
-                                 [((x::Int,Nothing), [(x-1,Nothing)]) 
-                                 | x <- [58..65]])
+                       (createMid 111 rowLengthsMid (-)) ++ 
+                       (createTri 10 (-)) ++ createTri 112 (+)) ++ cr
+               where cr = (((57, Nothing), [(58,Nothing)]): 
+                          [((x::Int,Nothing), [(x-1,Nothing)]) 
+                          | x <- [58..65]])
 
 {- Creates the upper/lower half of the board (without the triangle), 
    depending on which operator is passed in. -}
@@ -45,4 +46,14 @@ createMid n (r1:(r2:rs)) op = createRow 0 n r1 r2 op
 
 {- Creates the upper/lower triangle part of the board, depending on which
    operator is passed in. -}
---Not yet implemented
+createTri :: Int -> (Int -> Int -> Int) -> [[(Node, [Node])]] 
+createTri n op = [((n',Nothing),[(n' `op` (-1),Nothing)])]
+                 : connectTriMid (createMid n  rowLengthsTri op) 
+            where
+                n' = n `op` 9
+                connectTriMid (r:rs) = connect' r : rs
+                connect' [] = []
+                connect' (((i,v),es):is) = ((i,v), es' ++ es) : connect' is
+                      where
+                          es' = (i `op` (-8), Nothing) 
+                                : [(i `op` (-9), Nothing)]
