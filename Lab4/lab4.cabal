@@ -4,12 +4,18 @@ cabal-version:  >=1.2
 build-type:     Simple
 author:         Eric
 
-executable OGL
+executable Lab4
   hs-source-dirs:  src
   main-is:         Main.hs
   build-depends:   base >= 4,
                    GLUT >= 2.5.0.2,
                    GLUtil,
-                   OpenGL >= 2.9.1.0 
+                   OpenGL >= 2.9.1.0,
+                   graph-wrapper 
   ghc-options:     -Wall
+  other-modules:   
+                   Bindings,
+                   Calc,
+                   Display,
+                   GameBoard
 
