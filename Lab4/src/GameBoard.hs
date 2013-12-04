@@ -1,4 +1,4 @@
-module GameBoard (createBoard, update) where
+module GameBoard (createBoard, update, getAdjacent) where
 import Data.Graph.Wrapper
 
 -- Returns the intended lengths for the middle rows.
@@ -56,4 +56,6 @@ update i v g = fromList $ a ++ b'
                (a,b) = splitAt (i-1) (toList g)
                b' = if null b then b else change (head b) : tail b
                change (i', _, es) =  (i', v, es)
-                         
+               
+getAdjacent :: Int -> Graph Int (Maybe Int) ->  [Int]
+getAdjacent i g = successors g i ++ successors (transpose g) i
