@@ -49,13 +49,15 @@ createTri n op = [(n',[n' `op` (-1)])]
                 connect' ((i,es):is) = (i, es' ++ es) : connect' is
                       where
                           es' = i `op` (-8):[i `op` (-9)]
-                          
+
+-- Updates the node value at a certain index in the graph.                          
 update :: Int -> Maybe Int -> Graph Int (Maybe Int) -> Graph Int (Maybe Int)
 update i v g = fromList $ a ++ b'  
            where
                (a,b) = splitAt (i-1) (toList g)
                b' = if null b then b else change (head b) : tail b
                change (i', _, es) =  (i', v, es)
-               
+
+-- Returns the indexes of all nodes adjacent to the node it is pointed to.               
 getAdjacent :: Int -> Graph Int (Maybe Int) ->  [Int]
 getAdjacent i g = successors g i ++ successors (transpose g) i

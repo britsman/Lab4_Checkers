@@ -17,5 +17,6 @@ executable Lab4
                    Bindings,
                    Calc,
                    Display,
-                   GameBoard
+                   GameBoard,
+                   Players
 
