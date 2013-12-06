@@ -1,5 +1,7 @@
-module GameBoard (createBoard, update, getAdjacent) where
+module GameBoard (createBoard, update, possibleDestinations) where
 import Data.Graph.Wrapper
+import Data.Maybe
+import Data.List (nub, partition, (\\))
 
 -- Returns the intended lengths for the middle rows.
 rowLengthsMid :: [Int]
@@ -61,3 +63,25 @@ update i v g = fromList $ a ++ b'
 -- Returns the indexes of all nodes adjacent to the node it is pointed to.               
 getAdjacent :: Int -> Graph Int (Maybe Int) ->  [Int]
 getAdjacent i g = successors g i ++ successors (transpose g) i
+
+{- Messy pathcalcualtion, works and is fast but need to clean up code so it 
+   looks better, use less variables etc. -}
+possibleDestinations :: [Int] -> [Int] -> Graph Int (Maybe Int) -> [Int]
+possibleDestinations [] ds _ = ds
+possibleDestinations (i:is) ds g = possibleDestinations is2 ds2 g 
+        where 
+            aj = (filter (\x-> x `notElem` ds) (getAdjacent i g))
+            ajs = l' \\ (l \\ l')
+            l = concatMap (\x -> getAdjacent x g) aj
+            l' = nub l          
+            a' = if null ds then a else []
+            (a,b) = partition (\x -> isNothing (vertex g x)) aj
+            (is2, ds2) = tryPath b is (a' ++ ds)
+            tryPath [] ps' ds' = (ps', ds')
+            tryPath (i':is') ps' ds' = 
+               case filter (\x-> x `elem` ajs && 
+                             x `notElem` ds') (getAdjacent i' g) of
+                  [] -> tryPath is' ps' ds'
+                  (x:_) -> case vertex g x of
+                              Nothing -> tryPath is' (x:ps') (x:ds') 
+                              _ -> tryPath is' ps' ds'           
