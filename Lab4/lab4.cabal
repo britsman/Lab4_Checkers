@@ -11,6 +11,7 @@ executable Lab4
                    GLUT >= 2.5.0.2,
                    GLUtil,
                    OpenGL >= 2.9.1.0,
+                   QuickCheck,
                    graph-wrapper 
   ghc-options:     -Wall
   other-modules:   

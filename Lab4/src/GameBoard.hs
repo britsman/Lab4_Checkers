@@ -2,6 +2,7 @@ module GameBoard (createBoard, update, possibleDestinations) where
 import Data.Graph.Wrapper
 import Data.Maybe
 import Data.List (nub, partition, (\\))
+import Test.QuickCheck
 
 -- Returns the intended lengths for the middle rows.
 rowLengthsMid :: [Int]
@@ -84,4 +85,26 @@ possibleDestinations (i:is) ds g = possibleDestinations is2 ds2 g
                   [] -> tryPath is' ps' ds'
                   (x:_) -> case vertex g x of
                               Nothing -> tryPath is' (x:ps') (x:ds') 
-                              _ -> tryPath is' ps' ds'           
+                              _ -> tryPath is' ps' ds'      
+
+{- Verifies that the call to update correctly changed node value at the
+   correct index. -}                             
+prop_update_success :: Property
+prop_update_success = forAll (choose (1,121)) 
+                             (\x -> Just 1 == 
+                             vertex (update x (Just 1) createBoard) x)
+  
+-- Checks that all nodes x has adjacency to have x as an adjacency as well.                            
+prop_isAdjacent :: Property
+prop_isAdjacent = forAll (choose (1,121)) 
+                         (\x -> all (\y -> x `elem` getAdjacent y g) 
+                         $ getAdjacent x g)
+                   where g = createBoard
+
+{- Checks that all possible destinations given for a certain index actually
+   are empty. -}                              
+prop_blank_destinations :: Property
+prop_blank_destinations = forAll (choose (1,121)) 
+                                 (\x -> all (\y -> isNothing (vertex g y)) 
+                                 $ possibleDestinations [x] [] g)
+                           where g = createBoard

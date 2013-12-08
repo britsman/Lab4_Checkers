@@ -1,6 +1,7 @@
 module Players (initPlayers, playerWon) where
 import GameBoard
 import Data.Graph.Wrapper
+import Test.QuickCheck
 
 {- Returns the indexes that need to be updated in order to allow a certain
    player to participate. -}
@@ -35,3 +36,11 @@ playerWon p g
                  check (i:is)
                             | vertex g i /= Just p = False
                             | otherwise = check is
+             
+{- Fills up the winning destination of the chosen player, but NOT with the
+   values needed to win. Change to check for player win when arbitrary gen has been written-}                            
+prop_player_hasNotWon :: Property
+prop_player_hasNotWon = forAll (choose (1,6)) (\x -> 
+             case even x of
+              False -> not $ playerWon (x+1) $ initPlayers [x] createBoard
+              _ -> not $ playerWon (x-1) $ initPlayers [x] createBoard)
