@@ -1,4 +1,4 @@
-module Players (initPlayers, playerWon) where
+module Players (initPlayers, playerWon, prop_player_hasNotWon) where
 import GameBoard
 import Data.Graph.Wrapper
 import Test.QuickCheck
@@ -38,9 +38,9 @@ playerWon p g
                             | otherwise = check is
              
 {- Fills up the winning destination of the chosen player, but NOT with the
-   values needed to win. Change to check for player win when arbitrary gen has been written-}                            
-prop_player_hasNotWon :: Property
-prop_player_hasNotWon = forAll (choose (1,6)) (\x -> 
-             case even x of
-              False -> not $ playerWon (x+1) $ initPlayers [x] createBoard
-              _ -> not $ playerWon (x-1) $ initPlayers [x] createBoard)
+   values needed to win. -}                            
+prop_player_hasNotWon :: TestingGraph -> Property
+prop_player_hasNotWon g = forAll (choose (1,6)) (\x -> case even x of
+                         False -> not $ playerWon (x+1) $ initPlayers [x] g'
+                         _ -> not $ playerWon (x-1) $ initPlayers [x] g')
+                      where g' = graph g

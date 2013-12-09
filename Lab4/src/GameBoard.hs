@@ -1,4 +1,5 @@
-module GameBoard (createBoard, update, possibleDestinations) where
+module GameBoard (createBoard, update, possibleDestinations,  TestingGraph,
+graph, prop_update_success, prop_isAdjacent, prop_blank_destinations) where
 import Data.Graph.Wrapper
 import Data.Maybe
 import Data.List (nub, partition, (\\))
@@ -18,10 +19,10 @@ rowLengthsTri = [4,3..1]
    since each edge contains both nodes (1 edge = 2 patterns to match on). -}              
 createBoard :: Graph Int (Maybe Int)
 createBoard = fromList $ map (\(x,y) -> (x,Nothing,y)) 
-                             (concat ((createMid 11 rowLengthsMid (+)) ++ 
-                             (createMid 111 rowLengthsMid (-)) ++ 
-                             (createTri 10 (-)) ++ createTri 112 (+)) ++ cr)
-               where cr = ((57, [58]): [(x::Int, [x-1]) | x <- [58..65]])
+                             (concat (createMid 11 rowLengthsMid (+) ++ 
+                             createMid 111 rowLengthsMid (-) ++ 
+                             createTri 10 (-) ++ createTri 112 (+)) ++ cr)
+               where cr = (57, [58]): [(x::Int, [x-1]) | x <- [58..65]]
 
 {- Creates the upper/lower half of the board (without the triangle), 
    depending on which operator is passed in. -}
@@ -71,7 +72,7 @@ possibleDestinations :: [Int] -> [Int] -> Graph Int (Maybe Int) -> [Int]
 possibleDestinations [] ds _ = ds
 possibleDestinations (i:is) ds g = possibleDestinations is2 ds2 g 
         where 
-            aj = (filter (\x-> x `notElem` ds) (getAdjacent i g))
+            aj = filter (\x-> x `notElem` ds) (getAdjacent i g)
             ajs = l' \\ (l \\ l')
             l = concatMap (\x -> getAdjacent x g) aj
             l' = nub l          
@@ -87,24 +88,50 @@ possibleDestinations (i:is) ds g = possibleDestinations is2 ds2 g
                               Nothing -> tryPath is' (x:ps') (x:ds') 
                               _ -> tryPath is' ps' ds'      
 
+-- Save Not yet implemented
+
+
+--Load Not yet implemented
+
+
 {- Verifies that the call to update correctly changed node value at the
    correct index. -}                             
-prop_update_success :: Property
-prop_update_success = forAll (choose (1,121)) 
-                             (\x -> Just 1 == 
-                             vertex (update x (Just 1) createBoard) x)
-  
--- Checks that all nodes x has adjacency to have x as an adjacency as well.                            
-prop_isAdjacent :: Property
-prop_isAdjacent = forAll (choose (1,121)) 
-                         (\x -> all (\y -> x `elem` getAdjacent y g) 
-                         $ getAdjacent x g)
-                   where g = createBoard
+prop_update_success :: TestingGraph -> Property
+prop_update_success g = forAll (choose (1,121)) (\x -> Just 1 == 
+                               vertex (update x (Just 1) g') x)
+                         where g' = graph g
+                        
+-- Checks that all nodes x has adjacency to, have x as an adjacency as well.                            
+prop_isAdjacent :: TestingGraph -> Property
+prop_isAdjacent g = forAll (choose (1,121)) 
+                           (\x -> all (\y -> x `elem` getAdjacent y g') 
+                           $ getAdjacent x g')
+                     where g' = graph g
 
 {- Checks that all possible destinations given for a certain index actually
    are empty. -}                              
-prop_blank_destinations :: Property
-prop_blank_destinations = forAll (choose (1,121)) 
-                                 (\x -> all (\y -> isNothing (vertex g y)) 
-                                 $ possibleDestinations [x] [] g)
-                           where g = createBoard
+prop_blank_destinations :: TestingGraph -> Property
+prop_blank_destinations g = forAll (choose (1,121)) (\x -> all 
+                                   (\y -> isNothing (vertex g' y)) 
+                                   $ possibleDestinations [x] [] g')
+                             where g' = graph g
+
+{- Abstraction of graph-wrapper library Graph datatype (used to generate
+   arbitrary Graphs). -}
+data TestingGraph = TestingGraph { graph :: Graph Int (Maybe Int) }
+                deriving Show
+
+-- Arbitrary gameboards for QuickCheck testing.
+instance Arbitrary TestingGraph where
+ arbitrary = do
+               g <- genTestGraph 1 createBoard
+               return (TestingGraph g)
+
+{- Used to generate randomly filled gameboards for testing path calc logic.
+   varied boards are prioritized over test execution time (so runnning the
+   properties will take a few seconds -}                          
+genTestGraph :: Int -> Graph Int (Maybe Int) -> Gen (Graph Int (Maybe Int))
+genTestGraph 122 g = return g
+genTestGraph i g = do
+             v <- elements (Nothing : [Just x | x <- [1..6]])
+             genTestGraph (i+1) (update i v g)
