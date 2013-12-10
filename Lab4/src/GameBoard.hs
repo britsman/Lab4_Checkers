@@ -1,10 +1,11 @@
 module GameBoard (createBoard, update, possibleDestinations,  TestingGraph,
 graph, prop_update_success, prop_isAdjacent, prop_blank_destinations,
-saveBoard, getSaves, loadBoard, deleteSave) where
+saveBoard, getSaves, loadBoard, deleteSaves, prop_save_load) where
 import Data.Graph.Wrapper
 import Data.Maybe
 import Data.List (nub, partition, (\\))
 import Test.QuickCheck
+import Test.QuickCheck.Monadic
 import Data.Char
 
 -- Returns the intended lengths for the middle rows.
@@ -113,14 +114,12 @@ getSaves = do
             saves s = (map digitToInt (takeWhile (/= '[') s), 
                       (dropWhile (/= '[') s))
 
-{- Deletes a save by overwriting the file with the saves to be kept, then
-   returns the updated save list -}                     
-deleteSave :: [([Int], String)] -> IO [([Int], String)]
-deleteSave sl = do
-                 writeFile saveLocation sl' 
-                 f <- getSaves
-                 return f
-            where sl' = concatMap (\(x,y) -> map intToDigit x ++ y ++ "\n") sl  
+-- Deletes saves by overwriting the file with the saves to be kept.                    
+deleteSaves :: [([Int], String)] -> IO ()
+deleteSaves [([],"")] = writeFile saveLocation "" 
+deleteSaves sl = writeFile saveLocation sl' 
+            where 
+               sl' = concatMap (\(x,y) -> map intToDigit x ++ y ++ "\n") sl  
                           
 -- Loads the chosen save.
 loadBoard :: String -> Graph Int (Maybe Int)
@@ -152,18 +151,33 @@ prop_blank_destinations g = forAll (choose (1,121)) (\x -> all
                                    $ possibleDestinations [x] [] g')
                              where g' = graph g
 
+{- Verifies that a Graph is still the same after it's been saved and loaded.
+   It is recommended to run deleteSaves [([], "")] after testing to 
+   clean up the file. -}                             
+prop_save_load :: TestingGraph -> Property
+prop_save_load g =  monadicIO $ do
+                     run (saveBoard [1..6] g1)
+                     sl <- run (getSaves)
+                     (_, s) <- pick (return (last sl))
+                     g2 <- pick (return (loadBoard s))
+                     assert (toList g2 == toList g1)
+               where 
+                   g1 = graph g
+                       
 {- Abstraction of graph-wrapper library Graph datatype (used to generate
    arbitrary Graphs). -}
 data TestingGraph = TestingGraph { graph :: Graph Int (Maybe Int) }
                 deriving Show
 
--- Arbitrary gameboards for QuickCheck testing.
+{- Arbitrary gameboards for QuickCheck testing. These boards are not meant 
+   to be used in the game, they are only for verifying correctness of the
+   backend code. -}
 instance Arbitrary TestingGraph where
  arbitrary = do
                g <- genTestGraph 1 createBoard
                return (TestingGraph g)
 
-{- Used to generate randomly filled gameboards for testing path calc logic.
+{- Used to generate randomly filled gameboards for testing backend logic.
    varied boards are prioritized over test execution time (so runnning the
    properties will take a few seconds -}                          
 genTestGraph :: Int -> Graph Int (Maybe Int) -> Gen (Graph Int (Maybe Int))
