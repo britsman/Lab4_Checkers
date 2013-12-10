@@ -1,9 +1,11 @@
 module GameBoard (createBoard, update, possibleDestinations,  TestingGraph,
-graph, prop_update_success, prop_isAdjacent, prop_blank_destinations) where
+graph, prop_update_success, prop_isAdjacent, prop_blank_destinations,
+saveBoard, getSaves, loadBoard, deleteSave) where
 import Data.Graph.Wrapper
 import Data.Maybe
 import Data.List (nub, partition, (\\))
 import Test.QuickCheck
+import Data.Char
 
 -- Returns the intended lengths for the middle rows.
 rowLengthsMid :: [Int]
@@ -13,6 +15,10 @@ rowLengthsMid = [13,12..9]
    the length of the middle row that it connects to. -}
 rowLengthsTri :: [Int]
 rowLengthsTri = [4,3..1] 
+
+-- Filepath to saves.
+saveLocation :: FilePath
+saveLocation = "saves/saves.txt"
 
 {- Creates the full gameboard by constructing a graph from the upper/lower
    half/triangle. Edges only need to be constructed in one direction, 
@@ -88,11 +94,41 @@ possibleDestinations (i:is) ds g = possibleDestinations is2 ds2 g
                               Nothing -> tryPath is' (x:ps') (x:ds') 
                               _ -> tryPath is' ps' ds'      
 
--- Save Not yet implemented
+-- Saves remaining players and state of board to file.
+saveBoard :: [Int] -> Graph Int (Maybe Int) -> IO ()
+saveBoard ps g =  do
+                   appendFile saveLocation gameState
+                    where 
+                        gameState =  (concatMap show ps) ++ 
+                                     show (marbles (toList g)) ++ "\n"
+                        marbles [] = []
+                        marbles ((i, v, _):is) = (i,v) : marbles is
 
+-- Gets available saves so user can choose one to load.
+getSaves :: IO [([Int], String)]
+getSaves = do
+            f <- readFile saveLocation
+            return (map saves (lines f))
+        where
+            saves s = (map digitToInt (takeWhile (/= '[') s), 
+                      (dropWhile (/= '[') s))
 
---Load Not yet implemented
-
+{- Deletes a save by overwriting the file with the saves to be kept, then
+   returns the updated save list -}                     
+deleteSave :: [([Int], String)] -> IO [([Int], String)]
+deleteSave sl = do
+                 writeFile saveLocation sl' 
+                 f <- getSaves
+                 return f
+            where sl' = concatMap (\(x,y) -> map intToDigit x ++ y ++ "\n") sl  
+                          
+-- Loads the chosen save.
+loadBoard :: String -> Graph Int (Maybe Int)
+loadBoard s = load b (createBoard)
+          where
+              b = read (s)::[(Int, Maybe Int)]
+              load [] g = g
+              load ((i,v):is) g = load is (update i v g)
 
 {- Verifies that the call to update correctly changed node value at the
    correct index. -}                             
