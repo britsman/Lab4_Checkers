@@ -1,4 +1,4 @@
-module Players (initPlayers, playerWon, prop_player_hasNotWon) where
+module Players (initPlayers, playerWon, prop_player_hasNotWon, playerCurrent) where
 import GameBoard
 import Data.Graph.Wrapper
 import Test.QuickCheck
@@ -15,6 +15,15 @@ playerStart n =
                  5 -> [20..23] ++ [33..35] ++ [45,46] ++ [56]
                  6 -> 66 : [76,77] ++ [87..89] ++ [99..102] 
                  _ -> []
+                 
+playerCurrent :: Int -> Graph Int (Maybe Int) -> [Int]
+playerCurrent p g = find p 1 0
+          where
+              find p' i n    
+                      | n == 10 = [] 
+                      | vertex g i == Just p = i : 
+                                      find p (i+1) (n+1)
+                      | otherwise = find p (i+1) n 
 
 {- Fills the gameboard with initial values depending on how many players
    are participating (1-6) -}
