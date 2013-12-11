@@ -15,7 +15,8 @@ playerStart n =
                  5 -> [20..23] ++ [33..35] ++ [45,46] ++ [56]
                  6 -> 66 : [76,77] ++ [87..89] ++ [99..102] 
                  _ -> []
-                 
+
+-- Gets the positions of a certain player's marbles.                 
 playerCurrent :: Int -> Graph Int (Maybe Int) -> [Int]
 playerCurrent p g = find p 1 0
           where
