@@ -1,6 +1,6 @@
 module GameBoard (createBoard, update, possibleDestinations,  TestingGraph,
 graph, prop_update_success, prop_isAdjacent, prop_blank_destinations,
-saveBoard, getSaves, loadBoard, deleteSaves, prop_save_load) where
+saveBoard, getSaves, loadBoard, deleteSaves, prop_save_load, posNextMoves,makeMove) where
 import Data.Graph.Wrapper
 import Data.Maybe
 import Data.List (nub, partition, (\\))
@@ -19,7 +19,7 @@ rowLengthsTri = [4,3..1]
 
 -- Filepath to saves.
 saveLocation :: FilePath
-saveLocation = "saves/saves.txt"
+saveLocation = "../saves/saves.txt"
 
 {- Creates the full gameboard by constructing a graph from the upper/lower
    half/triangle. Edges only need to be constructed in one direction, 
@@ -69,6 +69,13 @@ update i v g = fromList $ a ++ b'
                b' = if null b then b else change (head b) : tail b
                change (i', _, es) =  (i', v, es)
 
+-- Updates moved from node to nothing and movet to node to player value.               
+makeMove :: Int -> Int -> Graph Int (Maybe Int) -> Graph Int (Maybe Int)
+makeMove fromNode toNode gb = update toNode val tempGB
+             where val = vertex gb fromNode
+                   tempGB = update fromNode Nothing gb
+                    
+
 -- Returns the indexes of all nodes adjacent to the node it is pointed to.               
 getAdjacent :: Int -> Graph Int (Maybe Int) ->  [Int]
 getAdjacent i g = successors g i ++ successors (transpose g) i
@@ -79,12 +86,12 @@ possibleDestinations :: [Int] -> [Int] -> Graph Int (Maybe Int) -> [Int]
 possibleDestinations [] ds _ = ds
 possibleDestinations (i:is) ds g = possibleDestinations is2 ds2 g 
         where 
-            aj = filter (\x-> x `notElem` ds) (getAdjacent i g)
+            aj = (getAdjacent i g)
             ajs = l' \\ (l \\ l')
-            l = concatMap (\x -> getAdjacent x g) aj
-            l' = nub l          
+            l = aj ++ (concatMap (\x -> getAdjacent x g) aj)
+            l' = nub l
             a' = if null ds then a else []
-            (a,b) = partition (\x -> isNothing (vertex g x)) aj
+            (a,b) = partition (\x -> isNothing (vertex g x)) (filter (\x-> x `notElem` ds) aj)
             (is2, ds2) = tryPath b is (a' ++ ds)
             tryPath [] ps' ds' = (ps', ds')
             tryPath (i':is') ps' ds' = 
@@ -93,7 +100,18 @@ possibleDestinations (i:is) ds g = possibleDestinations is2 ds2 g
                   [] -> tryPath is' ps' ds'
                   (x:_) -> case vertex g x of
                               Nothing -> tryPath is' (x:ps') (x:ds') 
-                              _ -> tryPath is' ps' ds'      
+                              _ -> tryPath is' ps' ds'
+
+-- Used to call possibleDestinations from GUI
+posNextMoves :: Int -> Graph Int (Maybe Int) -> [Int]
+posNextMoves i g = possibleDestinations [i] [] g 
+
+test i g = (ajs, l, l', aj)
+         where 
+            aj = (getAdjacent i g)
+            ajs = l' \\ (l \\ l')
+            l = aj ++ (concatMap (\x -> getAdjacent x g) aj)
+            l' = nub l
 
 -- Saves remaining players and state of board to file.
 saveBoard :: [Int] -> Graph Int (Maybe Int) -> IO ()

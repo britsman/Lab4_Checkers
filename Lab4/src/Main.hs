@@ -1,28 +1,31 @@
 module Main where
+
 import Graphics.UI.GLUT
-import Graphics.GLUtil
 import Data.IORef
 import Bindings
+import GameBoard
 import Display
- 
+import Players
+
+
 main :: IO ()
-main = do
-  (_progName, _args) <- getArgsAndInitialize
-  initialDisplayMode $= [WithDepthBuffer, DoubleBuffered]
-  initialWindowSize $= (Size 900 700)
-  initialWindowPosition $= (Position 0 0)
-  _window <- createWindow "Chinese Checkers"
+main = main' 6
+  
+main' :: Int -> IO ()
+main' nPlayers = do
+  (_progName,  _args ) <- getArgsAndInitialize
+  let playerList = [1..nPlayers]
+  initialDisplayMode $= [DoubleBuffered]
+  initialWindowSize $= Size 900 700
+  initialWindowPosition $= Position 0 0
+  _window <- createWindow "Hello test World" 
   reshapeCallback $= Just reshape
-  depthFunc $= Just Less
-  keyboardMouseCallback $= Just (keyboardMouse)
-  selectedZone <- newIORef (99.0 :: GLfloat)
-  Right t <- readTexture "board_niceaspect.png"
-  texture Texture2D $= Enabled
-  textureBinding Texture2D $= Just t
-  textureFilter Texture2D $= ((Linear', Nothing), Linear')
-  textureWrapMode Texture2D S $= (Mirrored, ClampToEdge)
-  textureWrapMode Texture2D T $= (Mirrored, ClampToEdge)
-  textureBinding Texture2D $= Nothing
-  texture Texture2D $= Disabled
-  displayCallback $= display t selectedZone --angle pos
+  selPos <- newIORef 0.0  
+  currentPlayer <- newIORef 0
+  gameboard <- newIORef $ initPlayers playerList createBoard
+  activePlayers <- newIORef playerList
+  keyboardMouseCallback $= Just (keyboardMouse selPos gameboard currentPlayer activePlayers)  
+  displayCallback $= display selPos gameboard  activePlayers currentPlayer
   mainLoop
+  
+ 

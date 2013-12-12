@@ -8,17 +8,15 @@ executable Lab4
   hs-source-dirs:  src
   main-is:         Main.hs
   build-depends:   base >= 4,
-                   GLUT >= 2.5.0.2,
-                   GLUtil,
-                   OpenGL >= 2.9.1.0,
+                   GLUT, 
+                   OpenGL,
                    QuickCheck,
-                   graph-wrapper 
-  ghc-options:     -Wall
+                   graph-wrapper
+  ghc-options:     -Wall 
   other-modules:   
-                   Bindings,
-                   Calc,
+                   MyQuads,
                    Display,
+                   Bindings,
                    GameBoard,
-                   MyPolygon,
                    Players
 

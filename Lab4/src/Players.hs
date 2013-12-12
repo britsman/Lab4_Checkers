@@ -17,15 +17,25 @@ playerStart n =
                  _ -> []
 
 -- Gets the positions of a certain player's marbles.                 
+--playerCurrent :: Int -> Graph Int (Maybe Int) -> [Int]
+--playerCurrent p g = find p 1 0
+--          where
+--              find p' i n    
+--                      | n == 10 = [] 
+--                      | vertex g i == Just p' = i : find p' (i+1) (n+1)
+--                      | otherwise = find p' (i+1) n 
+                      
+                      
+    
 playerCurrent :: Int -> Graph Int (Maybe Int) -> [Int]
-playerCurrent p g = find p 1 0
+playerCurrent p g = find 1 0
           where
-              find p' i n    
+              find i n    
                       | n == 10 = [] 
-                      | vertex g i == Just p = i : 
-                                      find p (i+1) (n+1)
-                      | otherwise = find p (i+1) n 
-
+                      | vertex g i == Just p = i : find (i+1) (n+1)
+                      | otherwise = find (i+1) n
+                      
+                      
 {- Fills the gameboard with initial values depending on how many players
    are participating (1-6) -}
 initPlayers :: [Int] -> Graph Int (Maybe Int) -> Graph Int (Maybe Int) 
