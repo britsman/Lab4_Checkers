@@ -19,7 +19,7 @@ rowLengthsTri = [4,3..1]
 
 -- Filepath to saves.
 saveLocation :: FilePath
-saveLocation = "../saves/saves.txt"
+saveLocation = "saves/saves.txt"
 
 {- Creates the full gameboard by constructing a graph from the upper/lower
    half/triangle. Edges only need to be constructed in one direction, 

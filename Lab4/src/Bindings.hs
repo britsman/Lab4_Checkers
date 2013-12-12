@@ -41,14 +41,14 @@ keyboardMouse selPos gameboard indexCurrentPlayer activePlayers key Down _ pos =
                                         if  isClickedNodePossibleDestination
                                             then do -- this block says what happens at end of move
                                                   writeIORef gameboard $ makeMove (round fromNode) (round selectedNode) gb
-                                                  writeIORef selPos 0.0                          
-                                                  if indCurPlay == (length actPlayers - 1)
-                                                     then writeIORef indexCurrentPlayer 0 
-                                                     else writeIORef indexCurrentPlayer (indCurPlay + 1)
+                                                  writeIORef selPos 0.0                                                                          
                                                   newGB <- get gameboard
                                                   if playerWon curPlay newGB && length actPlayers > 1
                                                      then writeIORef activePlayers (actPlayers \\ [curPlay]) 
                                                      else writeIORef activePlayers  actPlayers  -- = do nothing
+                                                  if indCurPlay >= (length actPlayers - 1)
+                                                     then writeIORef indexCurrentPlayer 0 
+                                                     else writeIORef indexCurrentPlayer (indCurPlay + 1)
                                             else writeIORef selPos 0.0
                                else writeIORef selPos 0.0
                 readIORef selPos >>= print
@@ -66,9 +66,8 @@ keyboardMouse selPos gameboard indexCurrentPlayer activePlayers key Down _ pos =
                 postRedisplay Nothing
   (SpecialKey KeyF5) ->  do
                 g <- get gameboard
-                p' <- get indexCurrentPlayer
+                p <- get indexCurrentPlayer
                 ps <- get activePlayers
-                p <- return (ps!!p')
                 saveBoard (p:ps) g
   (SpecialKey KeyF7) ->  do
                 writeIORef selPos 0.0
