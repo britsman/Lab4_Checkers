@@ -1,7 +1,6 @@
 module Calc where
  
-import Graphics.UI.GLUT
+import Data.Graph.Wrapper
 
---vertex3f :: (GLfloat, GLfloat, GLfloat) -> IO ()
---vertex3f (x, y, z) = vertex $ Vertex3 x y z
- 
+vertex' :: Int -> Graph Int (Maybe Int) -> Maybe Int
+vertex' i g = vertex g i
