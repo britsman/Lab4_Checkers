@@ -18,6 +18,5 @@ executable Lab4
                    Display,
                    Bindings,
                    GameBoard,
-                   Players,
-                   TestBranch
+                   Players
 
